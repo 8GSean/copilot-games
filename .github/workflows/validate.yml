@@ -23,6 +23,17 @@ jobs:
           cache: npm
           cache-dependency-path: server/package-lock.json
       - run: npm ci
+      - name: Start local Worker
+        run: |
+          npx wrangler dev --local --port 8787 > /tmp/wrangler.log 2>&1 &
+          echo $! > /tmp/wrangler.pid
+          for attempt in {1..30}; do
+            if curl --silent --fail http://localhost:8787/ > /dev/null; then
+              break
+            fi
+            sleep 1
+          done
+          curl --silent --fail http://localhost:8787/ > /dev/null
       - run: npm test
 
   static:
